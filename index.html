@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part Stocking Score System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .criteria-section {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .radio-option {
+            display: block;
+            margin: 10px 0;
+        }
+        .result-section {
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        #scoreDisplay {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #recommendation {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .score-explanation {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .threshold-settings {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .threshold-settings input {
+            width: 60px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Part Stocking Score System</h1>
+    
+
+
+    <div class="criteria-section">
+        <h2>1. Criticality to Operation</h2>
+        <label class="radio-option"><input type="radio" name="criticality" value="1"> 1 - Not critical, machine can run</label>
+        <label class="radio-option"><input type="radio" name="criticality" value="2"> 2 - Machine runs slower</label>
+        <label class="radio-option"><input type="radio" name="criticality" value="3"> 3 - Critical, machine will not run</label>
+    </div>
+
+    <div class="criteria-section">
+        <h2>2. Failure Frequency</h2>
+        <label class="radio-option"><input type="radio" name="failure" value="1"> 1 - Rarely fails</label>
+        <label class="radio-option"><input type="radio" name="failure" value="2"> 2 - Occasionally fails</label>
+        <label class="radio-option"><input type="radio" name="failure" value="3"> 3 - Frequently fails</label>
+    </div>
+
+    <div class="criteria-section">
+        <h2>3. Lead Time</h2>
+        <label class="radio-option"><input type="radio" name="leadTime" value="1"> 1 - Less than 2 days</label>
+        <label class="radio-option"><input type="radio" name="leadTime" value="2"> 2 - 2 to 7 days</label>
+        <label class="radio-option"><input type="radio" name="leadTime" value="3"> 3 - Over 7 days</label>
+    </div>
+
+    <div class="criteria-section">
+        <h2>4. Downtime Impact</h2>
+        <label class="radio-option"><input type="radio" name="downtime" value="1"> 1 - Minimal impact</label>
+        <label class="radio-option"><input type="radio" name="downtime" value="2"> 2 - Some loss in productivity</label>
+        <label class="radio-option"><input type="radio" name="downtime" value="3"> 3 - Major production halt</label>
+    </div>
+
+    <div class="criteria-section">
+        <h2>5. Cost of Part</h2>
+        <label class="radio-option"><input type="radio" name="cost" value="1"> 1 - Very expensive</label>
+        <label class="radio-option"><input type="radio" name="cost" value="2"> 2 - Moderate</label>
+        <label class="radio-option"><input type="radio" name="cost" value="3"> 3 - Low cost</label>
+    </div>
+
+    <div class="criteria-section">
+        <h2>6. Storage</h2>
+        <label class="radio-option"><input type="radio" name="storage" value="1"> 1 - Bulky or sensitive</label>
+        <label class="radio-option"><input type="radio" name="storage" value="2"> 2 - Manageable</label>
+        <label class="radio-option"><input type="radio" name="storage" value="3"> 3 - Easy to store</label>
+    </div>
+
+    <div class="criteria-section">
+        <h2>7. Ease of Replacement</h2>
+        <label class="radio-option"><input type="radio" name="replacement" value="1"> 1 - Requires specialist</label>
+        <label class="radio-option"><input type="radio" name="replacement" value="2"> 2 - Moderate difficulty</label>
+        <label class="radio-option"><input type="radio" name="replacement" value="3"> 3 - Easy, in-house task</label>
+    </div>
+
+    <div class="threshold-settings">
+        <h3>Stocking Threshold Settings</h3>
+        <p>Minimum score to recommend stocking: 
+            <input type="number" id="stockingThreshold" value="14" min="7" max="21">
+            out of 21 possible points
+        </p>
+    </div>
+    
+    <button onclick="calculateScore()">Calculate Score</button>
+
+    <div class="result-section" id="resultSection" style="display: none;">
+        <h2>Results</h2>
+        <div id="partDetails"></div>
+        <p>Total Score: <span id="scoreDisplay">0</span> / 21</p>
+        <p id="recommendation"></p>
+        
+        <div class="score-explanation">
+            <h3>Score Breakdown:</h3>
+            <ul id="scoreBreakdown"></ul>
+        </div>
+    </div>
+
+    <script>
+        function calculateScore() {
+            const categories = ['criticality', 'failure', 'leadTime', 'downtime', 'cost', 'storage', 'replacement'];
+            let totalScore = 0;
+            let breakdown = [];
+            let allSelected = true;
+            
+            // Check if all options are selected
+            for (const category of categories) {
+                const selected = document.querySelector(`input[name="${category}"]:checked`);
+                if (!selected) {
+                    allSelected = false;
+                    break;
+                }
+            }
+            
+            if (!allSelected) {
+                alert("Please select an option for all criteria before calculating the score.");
+                return;
+            }
+            
+            // Calculate score with breakdown
+            for (const category of categories) {
+                const selected = document.querySelector(`input[name="${category}"]:checked`);
+                const value = parseInt(selected.value);
+                totalScore += value;
+                
+                // Get the label text for this option
+                const labelText = selected.parentNode.textContent.trim();
+                const categoryName = document.querySelector(`h2:contains("${category}")`).textContent.trim().replace(/^\d+\.\s+/, '');
+                
+                breakdown.push({
+                    category: getCategoryName(category),
+                    option: labelText,
+                    score: value
+                });
+            }
+            
+            // Show the results
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('scoreDisplay').textContent = totalScore;
+            
+            // Part details removed as requested
+            document.getElementById('partDetails').innerHTML = ``;
+            
+            // Get threshold from input
+            const threshold = parseInt(document.getElementById('stockingThreshold').value);
+            
+            // Display recommendation
+            const recommendationElement = document.getElementById('recommendation');
+            if (totalScore >= threshold) {
+                recommendationElement.textContent = "RECOMMENDED TO STOCK";
+                recommendationElement.style.color = "green";
+            } else {
+                recommendationElement.textContent = "NOT RECOMMENDED TO STOCK";
+                recommendationElement.style.color = "red";
+            }
+            
+            // Display breakdown
+            const breakdownList = document.getElementById('scoreBreakdown');
+            breakdownList.innerHTML = '';
+            breakdown.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.category}: ${item.score} points (${item.option.split('-')[1].trim()})`;
+                breakdownList.appendChild(li);
+            });
+            
+            // Scroll to results
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function getCategoryName(category) {
+            const categoryMap = {
+                'criticality': 'Criticality to Operation',
+                'failure': 'Failure Frequency',
+                'leadTime': 'Lead Time',
+                'downtime': 'Downtime Impact',
+                'cost': 'Cost of Part',
+                'storage': 'Storage',
+                'replacement': 'Ease of Replacement'
+            };
+            return categoryMap[category] || category;
+        }
+        
+        // Helper function to find elements that contain certain text
+        Document.prototype.querySelector = Document.prototype.querySelector || function() {};
+        HTMLElement.prototype.contains = function(text) {
+            return this.textContent.includes(text);
+        };
+    </script>
+</body>
+</html>
