@@ -63,7 +63,6 @@
             padding: 15px;
             border-radius: 5px;
         }
-
         .threshold-settings {
             margin-top: 20px;
             padding: 15px;
@@ -77,8 +76,6 @@
 </head>
 <body>
     <h1>Part Stocking Score System</h1>
-    
-
 
     <div class="criteria-section">
         <h2>1. Criticality to Operation</h2>
@@ -180,7 +177,6 @@
                 
                 // Get the label text for this option
                 const labelText = selected.parentNode.textContent.trim();
-                const categoryName = document.querySelector(`h2:contains("${category}")`).textContent.trim().replace(/^\d+\.\s+/, '');
                 
                 breakdown.push({
                     category: getCategoryName(category),
@@ -192,9 +188,6 @@
             // Show the results
             document.getElementById('resultSection').style.display = 'block';
             document.getElementById('scoreDisplay').textContent = totalScore;
-            
-            // Part details removed as requested
-            document.getElementById('partDetails').innerHTML = ``;
             
             // Get threshold from input
             const threshold = parseInt(document.getElementById('stockingThreshold').value);
@@ -234,12 +227,6 @@
             };
             return categoryMap[category] || category;
         }
-        
-        // Helper function to find elements that contain certain text
-        Document.prototype.querySelector = Document.prototype.querySelector || function() {};
-        HTMLElement.prototype.contains = function(text) {
-            return this.textContent.includes(text);
-        };
     </script>
 </body>
 </html>
